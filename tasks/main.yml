@@ -7,9 +7,7 @@
     - vim
     - wget    
     - ntpdate
-    - firewalld
-  notify:
-    - iniciar firewalld
+    - firewalld  
   when: ansible_os_family == "RedHat"
 
 - name: Instalando o htop e o atop
@@ -26,7 +24,6 @@
     - vim
     - htop
     - wget
-    - htop
     - atop
     - ntpdate
   when: ansible_os_family == "Debian"
@@ -40,6 +37,8 @@
 - name: Desabilitando o selinux no CentOS
   shell: /usr/sbin/setenforce 0
   when: ansible_os_family == "RedHat"
+  notify:
+    - iniciar firewalld
   ignore_errors: yes
 
 - name: Substituindo a configuração default do selinux

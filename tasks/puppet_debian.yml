@@ -1,0 +1,15 @@
+---
+# tasks file for puppet
+- name: Download do repositorio
+  get_url: 
+    url: https://apt.puppetlabs.com/puppetlabs-release-{{ ansible_distribution_release }}.deb
+    dest: /tmp/puppetlabs-release-{{ ansible_distribution_release }}.deb
+
+- name: Instalando o pacote .deb
+  command: dpkg -i puppetlabs-release-{{ ansible_distribution_release }}.deb
+
+- name: Instar o puppet e puppet lint
+  apt: name={{ item }} update_cache=yes state=present
+  with_list: 
+    - puppet
+    - puppet-lint

@@ -1,0 +1,77 @@
+---
+# tasks file for basicinfra
+- name: Instalando dependencias minimas no servidor CentOS
+  yum: name={{ item }} state=present
+  with_list:
+    - epel-release
+    - vim
+    - wget    
+    - ntpdate
+    - firewalld
+  notify:
+    - iniciar firewalld
+  when: ansible_os_family == "RedHat"
+
+- name: Instalando o htop e o atop
+  yum: name={{ item }} state=present
+  with_list:
+    - htop
+    - atop
+  when: ansible_os_family == "RedHat"
+
+- name: Instalando dependecias minimas no servidor Debian
+  apt: name={{ item }} update_cache=yes state=present 
+  with_list:
+    - build-essential
+    - vim
+    - htop
+    - wget
+    - htop
+    - atop
+    - ntpdate
+  when: ansible_os_family == "Debian"
+
+- name: Mudando a porta do ssh para a 41442
+  shell: perl -p -i -e "s/#Port 22/Port 41442/g" /etc/ssh/sshd_config
+  notify:
+    - restart sshd
+  when: ansible_os_family == "RedHat"
+
+- name: Desabilitando o selinux no CentOS
+  shell: /usr/sbin/setenforce 0
+  when: ansible_os_family == "RedHat"
+  ignore_errors: yes
+
+- name: Substituindo a configuração default do selinux
+  shell: perl -p -i -e "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/sysconfig/selinux
+  when: ansible_os_family == "RedHat"
+
+- name: Adiciondo no firewalld a regra de entrada para a porta 41442 do bigip_device_sshd
+  shell: firewall-cmd --permanent --zone=public --add-port=41442/tcp
+  when: ansible_os_family == "RedHat"
+
+- name: Realizando um reaload no firewalld
+  shell: firewall-cmd --reload
+  when: ansible_os_family == "RedHat"
+
+- name: Instalando puppet no Debian
+  import_tasks: puppet_debian.yml
+  when: ansible_os_family == "Debian"
+
+- name: Instalando puppet no Centos
+  import_tasks: puppet_centos.yml
+  when: ansible_os_family == "RedHat"
+
+- name: Adicionando o arquivo puppet.conf
+  copy:
+    src: puppet.conf
+    dest: /etc/puppetlabs/puppet/puppet.conf
+
+- name: Adicionando o hostname no servidor
+  shell: echo "179.124.131.66 devops.infoway.lan" >> /etc/hosts
+
+- name: Adicionar o path do puppet
+  shell: source /etc/profile.d/puppet-agent.sh
+
+- name: Instalando o docker
+  import_tasks: docker.yml

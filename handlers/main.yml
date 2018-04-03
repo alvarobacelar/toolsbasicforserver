@@ -1,0 +1,11 @@
+---
+# handlers file for basicinfra
+- name: restart sshd
+  service: name=sshd state=restarted
+
+- name: iniciar firewalld
+  service: name=firewalld state=started
+
+- name: iniciar docker
+  service: name=docker state=started
+  
